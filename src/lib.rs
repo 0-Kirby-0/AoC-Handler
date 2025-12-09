@@ -5,13 +5,13 @@
 
 mod api_traits;
 mod input_handler;
-mod solution_wrappers;
+
 mod solver;
 
 use input_handler::Client;
 
 pub use api_traits::{DayMapper, DaySolver};
-pub use solution_wrappers::SolutionPart;
+
 pub use solver::Solver;
 
 pub type Day = u8;

@@ -1,4 +1,7 @@
-use super::{solver::Solver, Day, SolutionPart};
+use super::{
+    Day,
+    solver::{SolutionPart, Solver},
+};
 
 pub trait DayMapper {
     /// Provides access to the various day solutions.

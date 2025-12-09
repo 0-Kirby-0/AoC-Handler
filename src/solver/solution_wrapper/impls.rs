@@ -1,23 +1,4 @@
-pub struct Solution {
-    pub part_1: SolutionPart,
-    pub part_2: SolutionPart,
-}
-
-#[derive(Clone)]
-pub enum SolutionPart {
-    Unfinished,
-    Integer(String),
-    Real(f64),
-    String(String),
-}
-
-impl SolutionPart {
-    pub fn is_unfinished(&self) -> bool {
-        matches!(self, Self::Unfinished)
-    }
-}
-
-
+use crate::solver::SolutionPart;
 
 impl core::fmt::Display for SolutionPart {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
