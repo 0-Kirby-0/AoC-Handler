@@ -9,8 +9,18 @@ pub struct Client {
 
 impl Client {
     pub fn new() -> Self {
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            reqwest::header::USER_AGENT,
+            reqwest::header::HeaderValue::from_static(
+                "AoC-Handler (https://github.com/0-Kirby-0/AoC-Handler) <3",
+            ),
+        );
         Self {
-            client: reqwest::blocking::Client::new(),
+            client: reqwest::blocking::Client::builder()
+                .default_headers(headers)
+                .build()
+                .expect("Couldn't build reqwest client."),
             token: Token::new(),
         }
     }
@@ -42,7 +52,9 @@ impl Client {
 
         if input == "Puzzle inputs differ by user.  Please log in to get your puzzle input." {
             self.token.invalidate();
-            panic!("Cached Advent of Code session token failed to validate. Please try again to be prompted for the updated token.");
+            panic!(
+                "Cached Advent of Code session token failed to validate. Please try again to be prompted for the updated token."
+            );
             //? I cannot be bothered to build a loop that appropriately connects back to this same point.
             //? This harness is called repeatedly on solution re-compiles anyway, one more is fine.
         }
