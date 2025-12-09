@@ -1,6 +1,4 @@
-use solver::Solver;
-
-use super::*;
+use super::{solver::Solver, Day, SolutionPart};
 
 pub trait DayMapper {
     /// Provides access to the various day solutions.
@@ -31,10 +29,10 @@ pub trait DayMapper {
 ///         // No return is valid, and will be treated as "Not finished"
 ///     }
 ///     fn part_1_test_input() -> &'static str {
-///         r#"Line 1
+///         r"Line 1
 ///         Line 2
 ///         Line 3
-///         Line 4"#
+///         Line 4"
 ///     }
 ///     fn part_1_test_answer() -> impl Into<PartSolution> {
 ///         4
@@ -47,7 +45,7 @@ pub trait DaySolver {
     fn part_1(input: &str) -> impl Into<SolutionPart>;
     fn part_2(input: &str) -> impl Into<SolutionPart>;
     fn part_1_test_input() -> &'static str {
-        r#""#
+        r""
     }
     fn part_1_test_answer() -> impl Into<SolutionPart> {}
     fn part_2_test_input() -> &'static str {

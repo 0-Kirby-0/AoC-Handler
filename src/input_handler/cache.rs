@@ -37,7 +37,7 @@ pub mod text {
     use std::io::Read;
     use std::path::Path;
 
-    pub fn cache_text(sub_path: &Path, text: &str) -> std::io::Result<()> {
+    pub fn cache(sub_path: &Path, text: &str) -> std::io::Result<()> {
         if text.ends_with('\n') {
             super::cache(sub_path, text)
         } else {
@@ -47,7 +47,7 @@ pub mod text {
         }
     }
 
-    pub fn get_cached_text(sub_path: &Path) -> anyhow::Result<String> {
+    pub fn get_cached(sub_path: &Path) -> anyhow::Result<String> {
         let mut text = String::default();
         super::get_cached(sub_path)?
             .read_to_string(&mut text)

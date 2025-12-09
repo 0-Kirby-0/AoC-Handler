@@ -56,8 +56,8 @@ impl From<u8> for SolutionPart {
 impl core::fmt::Display for SolutionPart {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SolutionPart::Unfinished => write!(f, "Unfinished"),
-            SolutionPart::Number(n) => write!(f, "'{}'", n),
+            Self::Unfinished => write!(f, "Unfinished"),
+            Self::Number(n) => write!(f, "'{n}'"),
         }
     }
 }

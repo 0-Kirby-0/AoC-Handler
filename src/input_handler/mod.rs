@@ -2,12 +2,12 @@ use crate::{Day, Year};
 
 mod cache;
 
-pub struct InputHandler {
+pub struct Client {
     client: reqwest::blocking::Client,
     token: Token,
 }
 
-impl InputHandler {
+impl Client {
     pub fn new() -> Self {
         Self {
             client: reqwest::blocking::Client::new(),
@@ -23,7 +23,7 @@ impl InputHandler {
         //If the file is already cached, we trust that it's fine, because we wouldn't cache a broken file.
         //(And if we did, the user can delete the cache themselves)
         if cache::is_cached(&sub_path) {
-            return cache::text::get_cached_text(&sub_path)
+            return cache::text::get_cached(&sub_path)
                 .expect("Couldn't get cached input file, even though it exists.");
         }
 
@@ -47,7 +47,7 @@ impl InputHandler {
             //? This harness is called repeatedly on solution re-compiles anyway, one more is fine.
         }
 
-        cache::text::cache_text(&sub_path, &input).expect("Unable to cache input file.");
+        cache::text::cache(&sub_path, &input).expect("Unable to cache input file.");
         input
     }
 }
@@ -83,10 +83,10 @@ impl Token {
     }
 
     fn get_token_from_cache(path: &std::path::Path) -> String {
-        cache::text::get_cached_text(path).expect("Unable to get cached token.")
+        cache::text::get_cached(path).expect("Unable to get cached token.")
     }
     fn cache_token(path: &std::path::Path, token: &str) {
-        cache::text::cache_text(path, token)
+        cache::text::cache(path, token)
             .unwrap_or_else(|e| eprintln!("Unable to cache given token: {e}"));
     }
 

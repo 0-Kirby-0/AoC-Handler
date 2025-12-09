@@ -10,7 +10,7 @@ where
     DS: crate::DaySolver,
 {
     fn from(ds: DS) -> Self {
-        Solver {
+        Self {
             part_1: SolverPart {
                 solver: Box::new(move |input| DS::part_1(input).into()),
                 test_input: DS::part_1_test_input(),
@@ -66,7 +66,7 @@ impl SolverPart {
             println!("Solution not yet implemented.");
             return;
         }
-        println!("Solution: {:<15}\tTime taken: {:<8.2?}", solution, time);
+        println!("Solution: {solution:<15}\tTime taken: {time:<8.2?}");
     }
 
     fn run(&self, input: &str) {
@@ -103,11 +103,10 @@ fn compare_part_solutions(tested: &SolutionPart, correct: &SolutionPart) -> Test
     } else if let (SolutionPart::Number(tested_num), SolutionPart::Number(correct_num)) =
         (tested, correct)
     {
-        use std::cmp::Ordering::*;
         match tested_num.cmp(correct_num) {
-            Equal => TestResult::Correct,
-            Less => TestResult::TooLow(*tested, *correct),
-            Greater => TestResult::TooHigh(*tested, *correct),
+            std::cmp::Ordering::Equal => TestResult::Correct,
+            std::cmp::Ordering::Less => TestResult::TooLow(*tested, *correct),
+            std::cmp::Ordering::Greater => TestResult::TooHigh(*tested, *correct),
         }
     } else {
         unreachable!()
@@ -143,26 +142,19 @@ impl TestResult {
 impl core::fmt::Display for TestResult {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Correct => Ok(()),
-            Self::Unfinished => Ok(()),
+            Self::Correct | Self::Unfinished => Ok(()),
             Self::Unchecked(output) => {
-                write!(f, "Test: {}, no answer to check against.", output)
+                write!(f, "Test: {output}, no answer to check against.")
             }
-            Self::WrongFormat(ouput) => write!(
-                f,
-                "Test: {}. Test answer has wrong format to compare.",
-                ouput
-            ),
-            Self::TooHigh(output, correct) => write!(
-                f,
-                "Test: {} which is too high. Should be {}.",
-                output, correct
-            ),
-            Self::TooLow(output, correct) => write!(
-                f,
-                "Test: {} which is too low. Should be {}.",
-                output, correct
-            ),
+            Self::WrongFormat(ouput) => {
+                write!(f, "Test: {ouput}. Test answer has wrong format to compare.",)
+            }
+            Self::TooHigh(output, correct) => {
+                write!(f, "Test: {output} which is too high. Should be {correct}.",)
+            }
+            Self::TooLow(output, correct) => {
+                write!(f, "Test: {output} which is too low. Should be {correct}.",)
+            }
         }
     }
 }

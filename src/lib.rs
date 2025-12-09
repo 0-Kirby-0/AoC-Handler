@@ -1,10 +1,13 @@
 #![allow(dead_code, unused_variables)]
+#![warn(clippy::pedantic, clippy::nursery)]
+#![allow(clippy::must_use_candidate, clippy::missing_const_for_fn)]
+
 mod api_traits;
 mod input_handler;
 mod solution_wrappers;
 mod solver;
 
-use input_handler::InputHandler;
+use input_handler::Client;
 
 pub use api_traits::{DayMapper, DaySolver};
 pub use solution_wrappers::SolutionPart;
@@ -14,25 +17,27 @@ pub type Day = u8;
 pub type Year = u16;
 
 pub struct Handler<T: DayMapper> {
-    input_handler: InputHandler,
+    year: Year,
+    input: Client,
     day_mapper: T,
 }
 
 impl<T: DayMapper> Handler<T> {
     pub fn new(year: Year, day_mapper: T) -> Self {
         Self {
-            input_handler: InputHandler::new(year),
+            year,
+            input: Client::new(),
             day_mapper,
         }
     }
     /// Verifies the solution with test input and answer, then runs and displays the result for the main input if correct.
     pub fn run(&self, day: Day) {
         let solver = self.day_mapper.map(day);
-        let input = self.input_handler.get_day_input(day);
+        let input = self.input.get_day_input(self.year, day);
 
-        println!("Day {}:", day);
+        println!("Day {day}:");
         for part in 1..=2 {
-            print!("Part {}: ", part);
+            print!("Part {part}: ");
             solver.run_part(part, &input);
         }
     }
