@@ -62,7 +62,7 @@ impl SolutionPart {
             }
             (Self::Real(a), Self::Real(b)) => a.partial_cmp(b).map_or_else(
                 || {
-                    if a.is_normal() | a.is_subnormal() {
+                    if a.is_normal() || a.is_subnormal() {
                         CheckResult::Unchecked(self.clone())
                     } else {
                         CheckResult::WrongFormat(self.clone())
