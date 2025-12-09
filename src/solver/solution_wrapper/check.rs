@@ -1,11 +1,12 @@
 use crate::solver::SolutionPart;
 
+#[derive(Debug)]
 pub enum CheckResult {
     Correct,
     Unfinished,
     Unchecked(SolutionPart),
     WrongFormat(SolutionPart),
-    Incorrect(SolutionPart),
+    Incorrect(SolutionPart, SolutionPart),
     TooLow(SolutionPart, SolutionPart),
     TooHigh(SolutionPart, SolutionPart),
 }
@@ -28,8 +29,8 @@ impl core::fmt::Display for CheckResult {
             Self::WrongFormat(ouput) => {
                 write!(f, "Test: {ouput}. Test answer has wrong format to compare.",)
             }
-            Self::Incorrect(output) => {
-                write!(f, "Test: {output} is incorrect.",)
+            Self::Incorrect(output, correct) => {
+                write!(f, "Test: {output} is incorrect. Should be {correct}.",)
             }
             Self::TooHigh(output, correct) => {
                 write!(f, "Test: {output} is too high. Should be {correct}.",)

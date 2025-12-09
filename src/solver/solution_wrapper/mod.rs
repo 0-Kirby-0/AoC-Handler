@@ -3,7 +3,7 @@ mod impls;
 
 pub use check::CheckResult;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum SolutionPart {
     Unfinished,
     Integer(String),
@@ -78,7 +78,7 @@ impl SolutionPart {
                 if a == b {
                     CheckResult::Correct
                 } else {
-                    CheckResult::Incorrect(self.clone())
+                    CheckResult::Incorrect(self.clone(), correct.clone())
                 }
             }
             (_, _) => unreachable!(),
