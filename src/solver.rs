@@ -5,6 +5,20 @@ pub struct Solver {
     part_2: SolverPart,
 }
 
+impl Solver {
+    pub fn run_part(&self, part: u8, input: &str) {
+        self.get_part_solver(part).run(input);
+    }
+
+    fn get_part_solver(&self, index: u8) -> &SolverPart {
+        match index {
+            1 => &self.part_1,
+            2 => &self.part_2,
+            _ => panic!("Invalid part index."),
+        }
+    }
+}
+
 impl<DS> From<DS> for Solver
 where
     DS: crate::DaySolver,
@@ -31,21 +45,29 @@ struct SolverPart {
     test_answer: SolutionPart,
 }
 
-impl Solver {
-    fn get_part_solver(&self, index: u8) -> &SolverPart {
-        match index {
-            1 => &self.part_1,
-            2 => &self.part_2,
-            _ => panic!("Invalid part index."),
+impl SolverPart {
+    fn run(&self, input: &str) {
+        if self.is_testable() {
+            let test_result = self.test();
+
+            match (
+                test_result.should_be_printed(),
+                test_result.implies_real_results_are_valuable(),
+            ) {
+                (false, false) => (),
+                (true, false) => println!("{test_result}"),
+                (false, true) => self.print_time(input),
+                (true, true) => {
+                    println!("{test_result}");
+                    print!("{:8}", " \"");
+                    self.print_time(input);
+                }
+            }
+        } else {
+            self.print_time(input);
         }
     }
 
-    pub fn run_part(&self, part: u8, input: &str) {
-        self.get_part_solver(part).run(input);
-    }
-}
-
-impl SolverPart {
     fn is_testable(&self) -> bool {
         !self.test_input.is_empty()
     }
@@ -68,48 +90,74 @@ impl SolverPart {
         }
         println!("Solution: {solution:<15}\tTime taken: {time:<8.2?}");
     }
-
-    fn run(&self, input: &str) {
-        if self.is_testable() {
-            let test_result = self.test();
-            match (
-                test_result.should_be_printed(),
-                test_result.implies_real_results_are_valuable(),
-            ) {
-                (false, false) => (),
-                (true, false) => println!("{test_result}"),
-                (false, true) => self.print_time(input),
-                (true, true) => {
-                    println!("{test_result}");
-                    print!("{:8}", " \"");
-                    self.print_time(input);
-                }
-            }
-        } else {
-            self.print_time(input);
-        }
-    }
 }
 
-pub enum NamePending {}
-
 fn compare_part_solutions(tested: &SolutionPart, correct: &SolutionPart) -> TestResult {
-    if tested.is_unfinished() {
-        TestResult::Unfinished
-    } else if correct.is_unfinished() {
-        TestResult::Unchecked(*tested)
-    } else if std::mem::discriminant(tested) != std::mem::discriminant(correct) {
-        TestResult::WrongFormat(*tested)
-    } else if let (SolutionPart::Number(tested_num), SolutionPart::Number(correct_num)) =
-        (tested, correct)
-    {
-        match tested_num.cmp(correct_num) {
-            std::cmp::Ordering::Equal => TestResult::Correct,
-            std::cmp::Ordering::Less => TestResult::TooLow(*tested, *correct),
-            std::cmp::Ordering::Greater => TestResult::TooHigh(*tested, *correct),
+    use std::cmp::Ordering;
+    match (tested, correct) {
+        (SolutionPart::Unfinished, _) => TestResult::Unfinished,
+        (_, SolutionPart::Unfinished) => TestResult::Unchecked(tested.clone()),
+        (a, b) if std::mem::discriminant(a) != std::mem::discriminant(b) => {
+            TestResult::WrongFormat(tested.clone())
         }
-    } else {
-        unreachable!()
+        (SolutionPart::Integer(a), SolutionPart::Integer(b)) => {
+            fn compare_strings_as_ints(a: &str, b: &str) -> std::cmp::Ordering {
+                fn split_sign(s: &str) -> (bool, &str) {
+                    s.strip_prefix('-')
+                        .map_or((false, s), |digits| (true, digits))
+                }
+
+                let (neg_a, a) = split_sign(a);
+                let (neg_b, b) = split_sign(b);
+
+                // Different signs: negative < positive
+                if neg_a != neg_b {
+                    return if neg_a {
+                        Ordering::Less
+                    } else {
+                        Ordering::Greater
+                    };
+                }
+
+                // Same sign: compare absolute values
+                let abs_cmp = match a.len().cmp(&b.len()) {
+                    Ordering::Less => Ordering::Less,
+                    Ordering::Greater => Ordering::Greater,
+                    Ordering::Equal => a.cmp(b),
+                };
+
+                // For negatives, larger absolute value means smaller number
+                if neg_a { abs_cmp.reverse() } else { abs_cmp }
+            }
+
+            match compare_strings_as_ints(a, b) {
+                Ordering::Equal => TestResult::Correct,
+                Ordering::Less => TestResult::TooLow(tested.clone(), correct.clone()),
+                Ordering::Greater => TestResult::TooHigh(tested.clone(), correct.clone()),
+            }
+        }
+        (SolutionPart::Real(a), SolutionPart::Real(b)) => a.partial_cmp(b).map_or_else(
+            || {
+                if a.is_normal() | a.is_subnormal() {
+                    TestResult::Unchecked(tested.clone())
+                } else {
+                    TestResult::WrongFormat(tested.clone())
+                }
+            },
+            |cmp| match cmp {
+                Ordering::Equal => TestResult::Correct,
+                Ordering::Less => TestResult::TooLow(tested.clone(), correct.clone()),
+                Ordering::Greater => TestResult::TooHigh(tested.clone(), correct.clone()),
+            },
+        ),
+        (SolutionPart::String(a), SolutionPart::String(b)) => {
+            if a == b {
+                TestResult::Correct
+            } else {
+                TestResult::Incorrect(tested.clone())
+            }
+        }
+        (_, _) => unreachable!(),
     }
 }
 pub enum TestResult {
@@ -117,25 +165,16 @@ pub enum TestResult {
     Unfinished,
     Unchecked(SolutionPart),
     WrongFormat(SolutionPart),
+    Incorrect(SolutionPart),
     TooLow(SolutionPart, SolutionPart),
     TooHigh(SolutionPart, SolutionPart),
 }
 impl TestResult {
-    fn is_wrong(&self) -> bool {
-        matches!(
-            self,
-            Self::TooHigh(_, _) | Self::TooLow(_, _) | Self::WrongFormat(_)
-        )
-    }
-    fn is_unchecked(&self) -> bool {
-        matches!(self, Self::Unchecked(_))
-    }
-
     pub fn should_be_printed(&self) -> bool {
-        self.is_wrong() || self.is_unchecked()
+        !matches!(self, Self::Correct | Self::Unfinished)
     }
     pub fn implies_real_results_are_valuable(&self) -> bool {
-        !self.is_wrong() || self.is_unchecked()
+        matches!(self, Self::Correct | Self::Unfinished | Self::Unchecked(_))
     }
 }
 
@@ -149,11 +188,14 @@ impl core::fmt::Display for TestResult {
             Self::WrongFormat(ouput) => {
                 write!(f, "Test: {ouput}. Test answer has wrong format to compare.",)
             }
+            Self::Incorrect(output) => {
+                write!(f, "Test: {output} is incorrect.",)
+            }
             Self::TooHigh(output, correct) => {
-                write!(f, "Test: {output} which is too high. Should be {correct}.",)
+                write!(f, "Test: {output} is too high. Should be {correct}.",)
             }
             Self::TooLow(output, correct) => {
-                write!(f, "Test: {output} which is too low. Should be {correct}.",)
+                write!(f, "Test: {output} is too low. Should be {correct}.",)
             }
         }
     }

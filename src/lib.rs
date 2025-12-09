@@ -1,6 +1,7 @@
 #![allow(dead_code, unused_variables)]
-#![warn(clippy::pedantic, clippy::nursery)]
+#![warn(clippy::pedantic, clippy::nursery, clippy::todo)]
 #![allow(clippy::must_use_candidate, clippy::missing_const_for_fn)]
+#![feature(never_type)]
 
 mod api_traits;
 mod input_handler;
