@@ -15,7 +15,7 @@ impl CheckResult {
         !matches!(self, Self::Correct | Self::Unfinished)
     }
     pub fn implies_real_results_are_valuable(&self) -> bool {
-        matches!(self, Self::Correct | Self::Unfinished | Self::Unchecked(_))
+        matches!(self, Self::Correct | Self::Unchecked(_))
     }
 }
 
