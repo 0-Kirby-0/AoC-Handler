@@ -12,6 +12,7 @@ mod solver;
 use input_handler::Client;
 
 pub use api_traits::{DayMapper, DaySolver};
+pub use mapper::Mapper;
 pub use solver::{SolutionPart, Solver};
 pub type Day = u8;
 pub type Year = u16;
