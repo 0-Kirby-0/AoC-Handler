@@ -6,6 +6,7 @@
 mod api_traits;
 mod input_handler;
 
+mod mapper;
 mod solver;
 
 use input_handler::Client;
@@ -15,14 +16,14 @@ pub use solver::{SolutionPart, Solver};
 pub type Day = u8;
 pub type Year = u16;
 
-pub struct Handler<T: DayMapper> {
+pub struct Handler {
     year: Year,
     input: Client,
-    day_mapper: T,
+    day_mapper: mapper::Mapper,
 }
 
-impl<T: DayMapper> Handler<T> {
-    pub fn new(year: Year, day_mapper: T) -> Self {
+impl Handler {
+    pub fn new(year: Year, day_mapper: mapper::Mapper) -> Self {
         Self {
             year,
             input: Client::new(),
@@ -31,7 +32,7 @@ impl<T: DayMapper> Handler<T> {
     }
     /// Verifies the solution with test input and answer, then runs and displays the result for the main input if correct.
     pub fn run(&self, day: Day) {
-        let solver = self.day_mapper.map(day);
+        let solver = (self.day_mapper.map)(day);
         let input = self.input.get_day_input(self.year, day);
 
         println!("Day {day}:");

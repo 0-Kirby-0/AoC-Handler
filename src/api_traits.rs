@@ -14,7 +14,7 @@ pub trait DayMapper {
     ///     _ => unimplemented!("Not yet solved."),
     /// }
     /// ```
-    fn map(&self, day: Day) -> Solver;
+    fn map(day: Day) -> Solver;
 }
 
 /// A template for a zero-size type providing solution functions for a given day.
