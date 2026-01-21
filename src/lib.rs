@@ -1,45 +1,74 @@
 #![allow(dead_code, unused_variables)]
-#![warn(clippy::pedantic, clippy::nursery, clippy::todo)]
+#![warn(clippy::pedantic, clippy::nursery)]
+//#![warn(clippy::todo)]
 #![allow(clippy::must_use_candidate, clippy::missing_const_for_fn)]
 #![feature(never_type)]
 
-mod api_traits;
 mod input_handler;
 
-mod mapper;
-mod solver;
+mod api_traits;
+pub use api_traits::DaySolver;
 
-use input_handler::Client;
+mod check;
+mod run;
 
-pub use api_traits::{DayMapper, DaySolver};
-pub use mapper::Mapper;
-pub use solver::{SolutionPart, Solver};
-pub type Day = u8;
-pub type Year = u16;
+mod time;
+pub use time::{Day, Part, Year};
 
-pub struct Handler {
-    year: Year,
-    input: Client,
-    day_mapper: mapper::Mapper,
+mod type_conversions;
+pub use type_conversions::WrapSolver;
+
+pub struct Handler<'a> {
+    input: input_handler::Client,
+    mapper: &'a dyn Fn(Year, Day) -> Option<Solver>,
 }
 
-impl Handler {
-    pub fn new(year: Year, day_mapper: mapper::Mapper) -> Self {
+impl<'a> Handler<'a> {
+    pub fn new(mapper: &'a dyn Fn(Year, Day) -> Option<Solver>) -> Self {
         Self {
-            year,
-            input: Client::new(),
-            day_mapper,
+            input: input_handler::Client::new(),
+            mapper,
         }
     }
-    /// Verifies the solution with test input and answer, then runs and displays the result for the main input if correct.
-    pub fn run(&self, day: Day) {
-        let solver = (self.day_mapper.map)(day);
-        let input = self.input.get_day_input(self.year, day);
+}
 
-        println!("Day {day}:");
-        for part in 1..=2 {
-            print!("Part {part}: ");
-            solver.run_part(part, &input);
+pub struct Solver {
+    part_1: SolverPart,
+    part_2: SolverPart,
+}
+
+struct SolverPart {
+    solver: &'static dyn Fn(&str) -> SolutionPart,
+    test_input: &'static str,
+    test_answer: SolutionPart,
+}
+
+#[derive(Debug, Clone)]
+pub enum SolutionPart {
+    Unfinished,
+    Integer(String),
+    Real(f64),
+    String(String),
+}
+
+impl SolutionPart {
+    pub fn variant_name(&self) -> String {
+        match self {
+            Self::Unfinished => "Unfinished".to_string(),
+            Self::Integer(_) => "Integer".to_string(),
+            Self::Real(_) => "Real".to_string(),
+            Self::String(_) => "String".to_string(),
+        }
+    }
+}
+
+impl core::fmt::Display for SolutionPart {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Unfinished => write!(f, "Unfinished"),
+            Self::Integer(n) => write!(f, "'{n}'"),
+            Self::Real(r) => write!(f, "'{r}'"),
+            Self::String(s) => write!(f, "'{s}'"),
         }
     }
 }

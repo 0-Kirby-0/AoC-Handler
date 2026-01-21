@@ -1,15 +1,22 @@
-use crate::solver::SolutionPart;
+use crate::{SolutionPart, Solver, SolverPart};
 
-impl core::fmt::Display for SolutionPart {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Unfinished => write!(f, "Unfinished"),
-            Self::Integer(n) => write!(f, "'{n}'"),
-            Self::Real(r) => write!(f, "'{r}'"),
-            Self::String(s) => write!(f, "'{s}'"),
-        }
+pub trait WrapSolver: Sized + crate::DaySolver {
+    fn wrap() -> Option<Solver> {
+        Some(Solver {
+            part_1: SolverPart {
+                solver: &move |input| Self::part_1(input).into(),
+                test_input: Self::part_1_test_input(),
+                test_answer: Self::part_1_test_answer().into(),
+            },
+            part_2: SolverPart {
+                solver: &move |input| Self::part_2(input).into(),
+                test_input: Self::part_2_test_input(),
+                test_answer: Self::part_2_test_answer().into(),
+            },
+        })
     }
 }
+impl<DS: crate::DaySolver> WrapSolver for DS {}
 
 /* Unfinished */
 impl From<()> for SolutionPart {
@@ -26,16 +33,16 @@ impl From<!> for SolutionPart {
 
 /* Integer */
 macro_rules! impl_from_int {
-    ($($t:ty),* $(,)?) => {
-        $(
+        ($($t:ty),* $(,)?) => {
+            $(
             impl From<$t> for SolutionPart {
                 fn from(value: $t) -> Self {
                     Self::Integer(value.to_string())
                 }
             }
-        )*
-    };
-}
+            )*
+        };
+    }
 
 impl_from_int!(
     i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize
@@ -61,7 +68,7 @@ impl From<String> for SolutionPart {
 }
 impl From<&str> for SolutionPart {
     fn from(value: &str) -> Self {
-        Self::String(value.to_owned())
+        Self::String(value.to_string())
     }
 }
 impl From<char> for SolutionPart {
