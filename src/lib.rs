@@ -1,4 +1,4 @@
-#![allow(dead_code, unused_variables)]
+//#![allow(dead_code, unused_variables)]
 #![warn(clippy::pedantic, clippy::nursery)]
 #![warn(clippy::todo)]
 #![allow(
@@ -44,4 +44,3 @@ struct SolverPart {
     test_input: &'static str,
     test_answer: execution::SolutionPart,
 }
-

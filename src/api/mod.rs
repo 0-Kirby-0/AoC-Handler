@@ -177,8 +177,6 @@ impl Handler<'_> {
                 std::process::exit(0)
             });
 
-        let request = Request::Check;
-
         let part_return = self.execute_part(request, time_key, &std::cell::OnceCell::new());
 
         println!(

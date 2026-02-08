@@ -44,13 +44,13 @@ impl SolutionPart {
 
 /* Unimplemented */
 impl From<()> for SolutionPart {
-    fn from(value: ()) -> Self {
+    fn from(_value: ()) -> Self {
         Self::Unimplemented
     }
 }
 //? The only reason this needs nightly: Allowing the user to close their solution function with todo!() in peace
 impl From<!> for SolutionPart {
-    fn from(value: !) -> Self {
+    fn from(_value: !) -> Self {
         Self::Unimplemented
     }
 }

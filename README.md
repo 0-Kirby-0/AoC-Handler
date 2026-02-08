@@ -28,8 +28,8 @@ Here's an example:
 //in module day_1
 use aoc_handler::{DaySolver, SolutionPart};
 
-struct Day;
-impl DaySolver for Day {
+struct DayImpl;
+impl DaySolver for DayImpl {
     // Example: "Count the lines in the input."
     fn part_1(input: &str) -> impl Into<SolutionPart> {
         let parsed = parse(input);   // Invoking external helper functions.
@@ -42,10 +42,10 @@ impl DaySolver for Day {
     }
 
     fn part_1_test_input() -> &'static str {
-        r#"Line 1
+        "Line 1
         Line 2
         Line 3
-        Line 4"#
+        Line 4"
     }
 
     fn part_1_test_answer() -> impl Into<SolutionPart> {
@@ -59,20 +59,19 @@ impl DaySolver for Day {
 
 ### 3. Provide a mapper of solutions
 
-Use the `DayMapper` trait to map solutions for each day:
+Provide a function (or closure) that maps a `(Year, Day)` to a solver:
 
 ```rust
+use aoc_handler::{Year, Day, Solver}
+
 mod day_1;
 mod day_2;
 
-struct MyMapper;
-impl aoc_handler::DayMapper for MyMapper {
-    fn map(&self, day: Day) -> Option<aoc_handler::Solver> {
-        match day {
-            1 => day_1::Day.wrap(),
-            2 => day_2::Day.wrap(),
-            _ => None,
-        }
+fn map(year: Year, day: Day) -> Option<Solver> {
+    match day {
+        1 => day_1::DayImpl.wrap(),
+        2 => day_2::DayImpl.wrap(),
+        _ => None,
     }
 }
 ```
@@ -83,9 +82,27 @@ Create and use the handler in your `main` function.
 
 ```rust
 fn main() {
-    let handler = aoc_handler::Handler::new(2024, MyMapper);
-    handler.run(2); 
+    let handler = aoc_handler::Handler::new(&map);
+    
+    handler.run_most_recent_part(2024);
 }
 ```
 
-The run() function will attempt to run the tests provided for that day. If they pass, or no tests are provided, it will fetch the correct input file and run it on your solution.
+The API is split into **check** and **run** families:
+
+- **check\_***: runs test inputs and compares to test answers.  
+- **run\_***: does the check first, then (if it passes or no tests are provided) fetches the real AoC input and executes (and times) the solution.
+
+**Common highlights and use cases:**
+- **Solving in order:**  
+  - `run_most_recent_part(year)` is the default “keep going” option — it finds your latest implemented day and highest implemented part.  
+  - `run_most_recent_day(year)` is similar but runs both parts for that day (if implemented).
+- **Sanity check after changes:**  
+  - `check_year(year)` verifies all test cases for a year.
+- **Benchmarking/optimizing:**  
+  - `run_year(year)` re-runs the full year on real inputs to compare performance.
+
+**Other variants you may need:**
+- `check_day`, `run_day` — target a single day.
+- `check_part`, `run_part` — target a specific part.
+- `check_year_range`, `run_year_range` — bulk operations across multiple years.

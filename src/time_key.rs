@@ -5,11 +5,12 @@ pub type Day = u8;
 pub type Part = u8;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct TimeKey<TimeDetail> {
+pub struct TimeKey<Detail: TimeDetail> {
     pub year: Year,
-    pub detail: TimeDetail,
+    pub detail: Detail,
 }
 
+#[allow(unused)] //Simple marker trait
 pub trait TimeDetail {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -33,7 +34,7 @@ pub enum PartInternal {
     Two,
 }
 
-impl<TimeDetail> TimeKey<TimeDetail> {
+impl<Detail: TimeDetail> TimeKey<Detail> {
     fn max_days(year: Year) -> Day {
         match year {
             2015..2025 => 25,
@@ -51,10 +52,6 @@ impl TimeKey<TimeDetailNone> {
             year,
             detail: TimeDetailNone,
         })
-    }
-
-    pub fn to_primitive(self) -> Year {
-        self.year
     }
 
     pub fn iterate(self) -> impl DoubleEndedIterator<Item = TimeKey<TimeDetailDay>> {

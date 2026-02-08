@@ -143,6 +143,7 @@ impl super::Handler<'_> {
             return Ok(PartOutput::Checked(check_return));
         }
 
+        //* running
         let checked_run_return = if let CheckReturn::Failed(e) = check_return {
             CheckedRunReturn::CheckFailed(e)
         } else {
@@ -152,10 +153,19 @@ impl super::Handler<'_> {
                     let time_start = std::time::Instant::now();
                     let solution_part = (solver_part.solver)(input);
                     let time_taken = time_start.elapsed();
-                    CheckedRunReturn::Ok(RunReturn {
+
+                    let run_return = RunReturn {
                         solution_part,
                         time_taken,
-                    })
+                    };
+                    match check_return {
+                        CheckReturn::Passed => CheckedRunReturn::Ok(run_return),
+                        CheckReturn::Unchecked(uc) => CheckedRunReturn::Unchecked {
+                            reason: uc,
+                            ret: run_return,
+                        },
+                        CheckReturn::Failed(_) => unreachable!(),
+                    }
                 }
             }
         };

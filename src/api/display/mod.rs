@@ -1,13 +1,8 @@
 use crate::{
-    SolutionPart,
-    api::display::display_impls::display_day_chunk,
-    execution::{
-        result::{AcquisitionError, CheckReturn, DayReturn, PartOutput, PartReturn, RunReturn},
-        solution_part::CheckError,
-    },
+    api::display::display_impls::{display_day_chunk, display_part_return},
+    execution::result::{DayReturn, PartReturn},
     time_key::{TimeDetailDay, TimeDetailDayAndPart, TimeDetailNone, TimeKey},
 };
-use display_impls::display_part_return;
 
 mod display_impls;
 mod test;

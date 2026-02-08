@@ -1,6 +1,15 @@
+#![allow(unused)]
 #[allow(clippy::wildcard_imports)]
 use super::*;
-use crate::execution::result::{CheckedRunReturn, Unchecked};
+use crate::{
+    SolutionPart,
+    execution::{
+        result::{
+            AcquisitionError, CheckReturn, CheckedRunReturn, PartOutput, RunReturn, Unchecked,
+        },
+        solution_part::CheckError,
+    },
+};
 
 #[test]
 fn print_year() {
@@ -52,13 +61,7 @@ fn generate_part_return_variants() -> impl Iterator<Item = PartReturn> {
 
     let solution_parts = mandatory_solution_parts
         .into_iter()
-        .chain(std::iter::from_fn(|| {
-            let mut rng = rand::rng();
-            Some(SolutionPart::from(rand::Rng::random_range(
-                &mut rng,
-                -1_000_000..1_000_000,
-            )))
-        }));
+        .chain(std::iter::from_fn(|| Some(SolutionPart::from(1234))));
 
     let check_errors = [
         CheckError::WrongFormat(0.into(), "quid novi".into()),
@@ -89,11 +92,7 @@ fn generate_part_return_variants() -> impl Iterator<Item = PartReturn> {
     ];
 
     let times = mandatory_times.into_iter().chain(std::iter::from_fn(|| {
-        let mut rng = rand::rng();
-        Some(std::time::Duration::from_micros(rand::Rng::random_range(
-            &mut rng,
-            1..99_999,
-        )))
+        Some(std::time::Duration::from_micros(123))
     }));
 
     let run_return_count = 20;
