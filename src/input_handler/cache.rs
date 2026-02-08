@@ -33,11 +33,10 @@ fn file_path(sub_path: &Path) -> PathBuf {
 }
 
 pub mod text {
-    use anyhow::Context;
     use std::io::Read;
     use std::path::Path;
 
-    pub fn cache(sub_path: &Path, text: &str) -> std::io::Result<()> {
+    pub fn cache(sub_path: &Path, text: &str) -> Result<(), std::io::Error> {
         if text.ends_with('\n') {
             super::cache(sub_path, text)
         } else {
@@ -47,16 +46,9 @@ pub mod text {
         }
     }
 
-    pub fn get_cached(sub_path: &Path) -> anyhow::Result<String> {
+    pub fn get_cached(sub_path: &Path) -> Result<String, std::io::Error> {
         let mut text = String::default();
-        super::get_cached(sub_path)?
-            .read_to_string(&mut text)
-            .with_context(|| {
-                format!(
-                    "Unable to read cached file at '{}' to string.",
-                    sub_path.display()
-                )
-            })?;
+        super::get_cached(sub_path)?.read_to_string(&mut text)?;
         Ok(text.trim().to_owned())
     }
 }

@@ -67,12 +67,11 @@ mod day_2;
 
 struct MyMapper;
 impl aoc_handler::DayMapper for MyMapper {
-    fn map(&self, day: Day) -> aoc_handler::Solver {
+    fn map(&self, day: Day) -> Option<aoc_handler::Solver> {
         match day {
-            1 => day_1::Day.into(),
-            2 => day_2::Day.into(),
-            0 | 25.. => panic!("Invalid day, AoC only lasts from 1st to 25th of December."),
-            _ => unimplemented!("Not yet solved."),
+            1 => day_1::Day.wrap(),
+            2 => day_2::Day.wrap(),
+            _ => None,
         }
     }
 }

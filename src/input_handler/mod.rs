@@ -1,6 +1,11 @@
-use crate::{Day, Year};
+use crate::{
+    Day, Year,
+    time_key::{TimeDetailDay, TimeKey},
+};
 
 mod cache;
+mod token;
+use token::Token;
 
 pub struct Client {
     client: reqwest::blocking::Client,
@@ -8,6 +13,7 @@ pub struct Client {
 }
 
 impl Client {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
@@ -27,14 +33,15 @@ impl Client {
 
     /// Fetches the input data for a given day and year of Advent of Code.
     /// Preferentially sources from internal cache.
-    pub fn get_day_input(&self, year: Year, day: Day) -> String {
+    pub fn get_day_input(&self, key: TimeKey<TimeDetailDay>) -> Result<String, InputError> {
+        let (year, day) = key.to_primitive();
         let sub_path: std::path::PathBuf = format!("{year}/day{day}_input.txt").into();
 
         //If the file is already cached, we trust that it's fine, because we wouldn't cache a broken file.
         //(And if we did, the user can delete the cache themselves)
         if cache::is_cached(&sub_path) {
-            return cache::text::get_cached(&sub_path)
-                .expect("Couldn't get cached input file, even though it exists.");
+            //This can only fail if the file is *there*, but couldn't be read to string. That's weird.
+            return cache::text::get_cached(&sub_path).map_err(|_| InputError::CacheRead(sub_path));
         }
 
         let url = format!("https://adventofcode.com/{year}/day/{day}/input");
@@ -43,102 +50,52 @@ impl Client {
             .client
             .get(url)
             .header("Cookie", format!("session={}", self.token))
-            .send()
-            .expect("Failed to send request to AoC servers. Please check your internet connection.")
-            .text()
-            .expect("Failed to get response text from AoC servers. Please check if their servers are offline and try again later.")
+            .send()?
+            .text()?
             .trim()
             .to_owned();
 
-        if input == "Puzzle inputs differ by user.  Please log in to get your puzzle input." {
-            self.token.invalidate();
-            panic!(
-                "Cached Advent of Code session token failed to validate. Please try again to be prompted for the updated token."
-            );
-            //? I cannot be bothered to build a loop that appropriately connects back to this same point.
-            //? This harness is called repeatedly on solution re-compiles anyway, one more is fine.
-        }
+        match input.as_str() {
+            "Puzzle inputs differ by user.  Please log in to get your puzzle input." => {
+                self.token.invalidate();
+                Err(InputError::InvalidToken)
+            }
+            //? The AoC website appears to treat any day 0<x<100 as valid for checking, in which case it returns the "please don't repeatedly request"
+            //? Since TimeKey can only be valid dates, we are safe from erroneously hammering the connection
+            "404 Not Found"
+            | "Please don't repeatedly request this endpoint before it unlocks! The calendar countdown is synchronized with the server time; the link will be enabled on the calendar the instant this puzzle becomes available." => {
+                Err(InputError::NotFound { year, day })
+            }
 
-        cache::text::cache(&sub_path, &input).expect("Unable to cache input file.");
-        input
+            _ => Ok(()),
+        }?;
+
+        cache::text::cache(&sub_path, &input)?;
+        Ok(input)
     }
 }
 
-struct Token {
-    token: String,
-    path: std::path::PathBuf,
+#[derive(Debug, thiserror::Error, Clone)]
+pub enum InputError {
+    #[error("Cached input file  at {0} corrupted or unusable")]
+    CacheRead(std::path::PathBuf),
+    #[error("Unable to cache input file. {0}")]
+    CacheWrite(#[source] std::rc::Rc<std::io::Error>),
+    #[error("Connection to AoC servers failed. {0}")]
+    Request(#[source] std::rc::Rc<reqwest::Error>),
+    #[error("Session token invalid. Please try again to be prompted for a new token")]
+    InvalidToken,
+    #[error("No input data found for {year}-{day}")]
+    NotFound { year: Year, day: Day },
 }
 
-/*
-A note on security:
-Storing a token in plain text in file, no encryption, not even perm restrictions, feels horrible.
-However we have to acknowledge that this token is for AoC, a toy web page. There are no consequences of a token leak.
-Any security overhead we accept here would just be posturing, it's not worth it. */
-
-impl Token {
-    pub fn new() -> Self {
-        let path: std::path::PathBuf = "token.txt".into();
-
-        Self {
-            token: if cache::is_cached(&path) {
-                Self::get_token_from_cache(&path)
-            } else {
-                let token = Self::get_token_from_user();
-                Self::cache_token(&path, &token);
-                token
-            },
-            path,
-        }
-    }
-    pub fn invalidate(&self) {
-        cache::clear_cached(&self.path).expect("Unable to clear cached token file.");
-    }
-
-    fn get_token_from_cache(path: &std::path::Path) -> String {
-        cache::text::get_cached(path).expect("Unable to get cached token.")
-    }
-    fn cache_token(path: &std::path::Path, token: &str) {
-        cache::text::cache(path, token)
-            .unwrap_or_else(|e| eprintln!("Unable to cache given token: {e}"));
-    }
-
-    fn get_token_from_user() -> String {
-        println!("Please provide your AoC access token:");
-        println!("- 128 character hexadecimal string");
-        println!("- Found by inspecting AoC page requests in your browser");
-        println!(
-            "- Will be cached unencrypted in: {}",
-            dirs::cache_dir()
-                .expect("dirs did not provide a cache directory.")
-                .display()
-        );
-
-        let mut maybe_token = String::default();
-        std::io::stdin()
-            .read_line(&mut maybe_token)
-            .expect("Unable to read given token.");
-        let maybe_token = maybe_token.trim().to_string();
-        Self::validate_format(&maybe_token).expect("The provided token was invalid:");
-
-        maybe_token
-    }
-
-    fn validate_format(maybe_token: &str) -> Result<(), String> {
-        if maybe_token.len() != 128 {
-            Err("Token is incorrect length. Should be 128 characters.".to_string())
-        } else if !(maybe_token
-            .chars()
-            .all(|c| matches!(c, '0'..='9' | 'a'..='f')))
-        {
-            Err("Token contains invalid characters. Must be hexadecimal.".to_string())
-        } else {
-            Ok(())
-        }
+impl From<std::io::Error> for InputError {
+    fn from(value: std::io::Error) -> Self {
+        Self::CacheWrite(std::rc::Rc::new(value))
     }
 }
-
-impl std::fmt::Display for Token {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.token)
+impl From<reqwest::Error> for InputError {
+    fn from(value: reqwest::Error) -> Self {
+        Self::Request(std::rc::Rc::new(value))
     }
 }

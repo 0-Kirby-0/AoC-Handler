@@ -1,4 +1,4 @@
-use crate::SolutionPart;
+use crate::{SolutionPart, Solver, SolverPart};
 
 /// A template for a zero-size type providing solution functions for a given day.
 /// Test functions can be overridden.
@@ -40,3 +40,21 @@ pub trait DaySolver {
     }
     fn part_2_test_answer() -> impl Into<SolutionPart> {}
 }
+
+pub trait WrapSolver: Sized + DaySolver {
+    fn wrap() -> Option<Solver> {
+        Some(Solver {
+            part_1: SolverPart {
+                solver: &move |input| Self::part_1(input).into(),
+                test_input: Self::part_1_test_input(),
+                test_answer: Self::part_1_test_answer().into(),
+            },
+            part_2: SolverPart {
+                solver: &move |input| Self::part_2(input).into(),
+                test_input: Self::part_2_test_input(),
+                test_answer: Self::part_2_test_answer().into(),
+            },
+        })
+    }
+}
+impl<DS: DaySolver> WrapSolver for DS {}
