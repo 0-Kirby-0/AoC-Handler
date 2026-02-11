@@ -55,7 +55,7 @@ impl DaySolver for DayImpl {
     }
 
     // If there is no useable test (as in some older iterations of AoC),
-    // testing can be skipped by returning an empty string.
+    // testing can be skipped by providing an empty string.
     fn part_2_test_input() -> impl Into<TestInput> {
         ""
     }

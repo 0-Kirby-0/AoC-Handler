@@ -89,6 +89,7 @@ fn generate_part_return_variants() -> impl Iterator<Item = PartReturn> {
     let mandatory_times = [
         std::time::Duration::from_micros(1),
         std::time::Duration::from_millis(1),
+        std::time::Duration::from_millis(15),
         std::time::Duration::from_secs(1),
         std::time::Duration::from_mins(1),
     ];

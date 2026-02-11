@@ -95,10 +95,20 @@ impl std::fmt::Display for CheckedRunReturn {
 
 impl std::fmt::Display for RunReturn {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Self {
+            solution_part,
+            time_taken,
+        } = self;
+        let time_print = if *time_taken >= std::time::Duration::from_secs(1) {
+            format!("[31m{time_taken:>8.2?}[39m")
+        } else if *time_taken >= std::time::Duration::from_millis(10) {
+            format!("[33m{time_taken:>8.2?}[39m")
+        } else {
+            format!("[32m{time_taken:>8.2?}[39m")
+        };
         write!(
             f,
-            "[2m{:>8.2?}[22m [1m[32m{:48}[39m[22m",
-            self.time_taken, self.solution_part
+            "[2m{time_print}[22m [1m[32m{solution_part:48}[39m[22m"
         )
     }
 }
