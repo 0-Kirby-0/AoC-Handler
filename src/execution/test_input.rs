@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 pub enum TestInput {
     None,
     Empty,
@@ -33,5 +35,5 @@ impl From<String> for TestInput {
 fn dedent(input: &str) -> String {
     //? I'm unaware of any AoC input that actually relies on leading whitespace anywhere
     //? If something like that arises, I will add proper dedentation a la indoc
-    input.lines().map(str::trim_start).collect()
+    input.lines().map(str::trim_start).join("\n")
 }
