@@ -15,7 +15,7 @@ impl From<&str> for TestInput {
         if value.is_empty() {
             Self::Empty
         } else {
-            Self::Input(value.to_owned())
+            Self::Input(dedent(value))
         }
     }
 }
@@ -25,7 +25,13 @@ impl From<String> for TestInput {
         if value.is_empty() {
             Self::Empty
         } else {
-            Self::Input(value)
+            Self::Input(dedent(&value))
         }
     }
+}
+
+fn dedent(input: &str) -> String {
+    //? I'm unaware of any AoC input that actually relies on leading whitespace anywhere
+    //? If something like that arises, I will add proper dedentation a la indoc
+    input.lines().map(str::trim_start).collect()
 }
