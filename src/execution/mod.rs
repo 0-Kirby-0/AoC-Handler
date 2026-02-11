@@ -157,6 +157,7 @@ impl super::Handler<'_> {
                 let time_start = std::time::Instant::now();
                 let solution_part = (solver_part.solver)(input);
                 let time_taken = time_start.elapsed();
+
                 RunReturn {
                     solution_part,
                     time_taken,
@@ -173,6 +174,22 @@ impl super::Handler<'_> {
                     CheckReturn::Failed(_) => unreachable!(),
                 },
             );
+
+        match checked_run_return {
+            CheckedRunReturn::Ok(RunReturn {
+                solution_part: SolutionPart::Unimplemented,
+                time_taken: _,
+            }) //Test passed, but rr is unimplemented? Weird
+            | CheckedRunReturn::Unchecked {
+                reason: _,
+                ret:
+                    RunReturn {
+                        solution_part: SolutionPart::Unimplemented,
+                        time_taken: _,
+                    },
+            } => return Err(AcquisitionError::Unimplemented),
+            _ => (),
+        }
 
         Ok(PartOutput::CheckedAndRan(checked_run_return))
     }
