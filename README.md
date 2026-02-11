@@ -25,35 +25,40 @@ A convenient structure is to create a module for each day, but this is optional.
 Here's an example:
 
 ```rust
-//in module day_1
-use aoc_handler::{DaySolver, SolutionPart};
+// in module day_1
+use aoc_handler::{DaySolver, SolutionPart, TestInput};
 
 struct DayImpl;
+
 impl DaySolver for DayImpl {
     // Example: "Count the lines in the input."
     fn part_1(input: &str) -> impl Into<SolutionPart> {
         let parsed = parse(input);   // Invoking external helper functions.
-        parsed.iter().count()        // Return is automatically inferred and accepted as the solution.
+        parsed.iter().count()        // Return is inferred and accepted as the solution.
     }
 
     // Example: Not yet unlocked.
-    fn part_2(input: &str) -> impl Into<SolutionPart> {
-        // Returning unit () is valid, and will be treated as "Not finished"
+    fn part_2(_input: &str) -> impl Into<SolutionPart> {
+        // Returning unit () is valid, and will be treated as "Unimplemented"
     }
 
-    fn part_1_test_input() -> &'static str {
+    fn part_1_test_input() -> impl Into<TestInput> {
         "Line 1
-        Line 2
+        Line 2  
         Line 3
         Line 4"
+        // Leading whitespace on lines in the input is automatically removed
     }
 
     fn part_1_test_answer() -> impl Into<SolutionPart> {
         4
     }
 
-    // Test input for part 2 is the same as part 1, so left blank.
-    // Test answer for part 2 is not yet unlocked, so also left blank.
+    // If there is no useable test (as in some older iterations of AoC),
+    // testing can be skipped by returning an empty string.
+    fn part_2_test_input() -> impl Into<TestInput> {
+        ""
+    }
 }
 ```
 
