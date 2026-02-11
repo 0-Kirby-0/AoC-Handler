@@ -16,9 +16,7 @@ mod time_key;
 pub use time_key::{Day, Part, Year};
 
 mod execution;
-pub use execution::SolutionPart;
-
-use crate::execution::test_input::TestInput;
+pub use execution::{SolutionPart, TestInput};
 
 mod input_handler;
 

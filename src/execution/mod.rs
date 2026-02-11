@@ -1,18 +1,17 @@
 use crate::{
-    execution::{
-        result::{CheckedRunReturn, DayReturn, PartReturn, Unchecked},
-        test_input::TestInput,
-    },
+    execution::result::{CheckedRunReturn, DayReturn, PartReturn, Unchecked},
     input_handler::InputError,
     time_key::{
         Day, Part, PartInternal, TimeDetailDay, TimeDetailDayAndPart, TimeDetailNone, TimeKey,
     },
 };
-pub mod result;
+
 pub mod solution_part;
-pub mod test_input;
-use result::{AcquisitionError, CheckReturn, PartOutput, RunReturn};
 pub use solution_part::SolutionPart;
+mod test_input;
+pub use test_input::TestInput;
+pub mod result;
+use result::{AcquisitionError, CheckReturn, PartOutput, RunReturn};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Request {

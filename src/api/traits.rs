@@ -1,4 +1,4 @@
-use crate::{SolutionPart, Solver, SolverPart, execution::test_input::TestInput};
+use crate::{SolutionPart, Solver, SolverPart, TestInput};
 
 /// A template for a zero-size type providing solution functions for a given day.
 /// Test functions can be overridden.
