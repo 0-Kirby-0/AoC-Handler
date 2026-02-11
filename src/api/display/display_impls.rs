@@ -116,7 +116,7 @@ impl std::fmt::Display for RunReturn {
 impl std::fmt::Display for Unchecked {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Elided => write!(f, "[32mTest elided.[32m"),
+            Self::Elided => write!(f, "[32mTest elided.[39m"),
             Self::ElideMismatch(sp) => write!(
                 f,
                 "[33mTried to elide test (empty string), but provided test answer ([4m{sp}[24m)[39m"
