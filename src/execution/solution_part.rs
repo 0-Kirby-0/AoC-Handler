@@ -21,7 +21,7 @@ impl SolutionPart {
         let check_return = match (&self, correct) {
             (Self::Unimplemented, _) => unreachable!(),
             (_, Self::Unimplemented) => {
-                CheckReturn::Unchecked(crate::execution::result::Unchecked::NoOuput(self))
+                CheckReturn::Unchecked(crate::execution::result::Unchecked::MissingOuput(self))
             }
             (Self::Number(a), Self::Number(b)) => match a.cmp(b) {
                 std::cmp::Ordering::Equal => CheckReturn::Passed,

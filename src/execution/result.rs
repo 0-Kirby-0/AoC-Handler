@@ -61,8 +61,10 @@ pub struct RunReturn {
 
 #[derive(Debug, Clone)]
 pub enum Unchecked {
-    NoInput,
-    NoOuput(SolutionPart),
+    Elided,
+    ElideMismatch(SolutionPart),
+    MissingInput,
+    MissingOuput(SolutionPart),
 }
 
 impl PartialEq for PartOutput {
@@ -80,8 +82,8 @@ impl PartialEq for CheckReturn {
             (self, other),
             (Self::Passed, Self::Passed)
                 | (
-                    Self::Unchecked(Unchecked::NoInput),
-                    Self::Unchecked(Unchecked::NoInput)
+                    Self::Unchecked(Unchecked::MissingInput),
+                    Self::Unchecked(Unchecked::MissingInput)
                 )
         )
     }

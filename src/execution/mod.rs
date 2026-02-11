@@ -1,5 +1,8 @@
 use crate::{
-    execution::result::{CheckedRunReturn, DayReturn, PartReturn, Unchecked},
+    execution::{
+        result::{CheckedRunReturn, DayReturn, PartReturn, Unchecked},
+        test_input::TestInput,
+    },
     input_handler::InputError,
     time_key::{
         Day, Part, PartInternal, TimeDetailDay, TimeDetailDayAndPart, TimeDetailNone, TimeKey,
@@ -7,6 +10,7 @@ use crate::{
 };
 pub mod result;
 pub mod solution_part;
+pub mod test_input;
 use result::{AcquisitionError, CheckReturn, PartOutput, RunReturn};
 pub use solution_part::SolutionPart;
 
@@ -109,66 +113,67 @@ impl super::Handler<'_> {
             PartInternal::Two => solver.part_2,
         };
 
-        //? Special early return
-        if matches!(request, Request::Check) // We only want to check, but
-            && solver_part.test_input.is_empty() //We don't have a check input, but
-            && let Ok(input) = run_input.get_or_init(|| self.input.get_day_input(time_key.deref()))
-        //We do have a real input
-        {
-            let ret = (solver_part.solver)(input);
-            return if matches!(ret, SolutionPart::Unimplemented) {
-                //Which reveals the part is unimplemented
-                Err(AcquisitionError::Unimplemented)
-            } else {
-                //Or there is real code, but we were only asked to check
-                Ok(PartOutput::Checked(CheckReturn::Unchecked(
-                    Unchecked::NoInput,
-                )))
-            };
-        }
-
         //* Checking
-        let check_return = if solver_part.test_input.is_empty() {
-            CheckReturn::Unchecked(Unchecked::NoInput)
-        } else {
-            let ret = (solver_part.solver)(solver_part.test_input);
-            match ret.check_against(&solver_part.test_answer) {
-                None => return Err(AcquisitionError::Unimplemented),
-                Some(check_return) => check_return,
+
+        let check_return = match solver_part.test_input {
+            TestInput::None => CheckReturn::Unchecked(Unchecked::MissingInput),
+            TestInput::Empty => match solver_part.test_answer {
+                SolutionPart::Unimplemented => CheckReturn::Unchecked(Unchecked::Elided),
+                sp => CheckReturn::Unchecked(Unchecked::ElideMismatch(sp)),
+            },
+            TestInput::Input(i) => {
+                let ret = (solver_part.solver)(&i);
+                match ret.check_against(&solver_part.test_answer) {
+                    None => return Err(AcquisitionError::Unimplemented),
+                    Some(check_return) => check_return,
+                }
             }
         };
 
-        //? Early return, we're only checking
+        //? Return: Only checking
         if matches!(request, Request::Check) {
+            //? Special case: No test input, but real input, and real input returned Unimplemented
+            if matches!(
+                check_return,
+                CheckReturn::Unchecked(Unchecked::MissingInput)
+            ) && let Ok(input) =
+                run_input.get_or_init(|| self.input.get_day_input(time_key.deref()))
+                && matches!((solver_part.solver)(input), SolutionPart::Unimplemented)
+            {
+                return Err(AcquisitionError::Unimplemented);
+            }
             return Ok(PartOutput::Checked(check_return));
         }
 
         //* running
-        let checked_run_return = if let CheckReturn::Failed(e) = check_return {
-            CheckedRunReturn::CheckFailed(e)
-        } else {
-            match run_input.get_or_init(|| self.input.get_day_input(time_key.deref())) {
-                Err(ie) => CheckedRunReturn::RunFailed(ie.clone()),
-                Ok(input) => {
-                    let time_start = std::time::Instant::now();
-                    let solution_part = (solver_part.solver)(input);
-                    let time_taken = time_start.elapsed();
+        //? Return: Check failed
+        if let CheckReturn::Failed(e) = check_return {
+            return Ok(PartOutput::CheckedAndRan(CheckedRunReturn::CheckFailed(e)));
+        }
 
-                    let run_return = RunReturn {
-                        solution_part,
-                        time_taken,
-                    };
-                    match check_return {
-                        CheckReturn::Passed => CheckedRunReturn::Ok(run_return),
-                        CheckReturn::Unchecked(uc) => CheckedRunReturn::Unchecked {
-                            reason: uc,
-                            ret: run_return,
-                        },
-                        CheckReturn::Failed(_) => unreachable!(),
-                    }
+        let checked_run_return = run_input
+            .get_or_init(|| self.input.get_day_input(time_key.deref()))
+            .as_ref()
+            .map(|input| {
+                let time_start = std::time::Instant::now();
+                let solution_part = (solver_part.solver)(input);
+                let time_taken = time_start.elapsed();
+                RunReturn {
+                    solution_part,
+                    time_taken,
                 }
-            }
-        };
+            })
+            .map_or_else(
+                |input_error| CheckedRunReturn::RunFailed(input_error.clone()),
+                |run_return| match check_return {
+                    CheckReturn::Passed => CheckedRunReturn::Ok(run_return),
+                    CheckReturn::Unchecked(uc) => CheckedRunReturn::Unchecked {
+                        reason: uc,
+                        ret: run_return,
+                    },
+                    CheckReturn::Failed(_) => unreachable!(),
+                },
+            );
 
         Ok(PartOutput::CheckedAndRan(checked_run_return))
     }

@@ -71,8 +71,10 @@ fn generate_part_return_variants() -> impl Iterator<Item = PartReturn> {
     ];
 
     let check_returns = [
-        CheckReturn::Unchecked(Unchecked::NoInput),
-        CheckReturn::Unchecked(Unchecked::NoOuput("dolor sit amet".into())),
+        CheckReturn::Unchecked(Unchecked::Elided),
+        CheckReturn::Unchecked(Unchecked::ElideMismatch("tempor incididunt".into())),
+        CheckReturn::Unchecked(Unchecked::MissingInput),
+        CheckReturn::Unchecked(Unchecked::MissingOuput("dolor sit amet".into())),
         CheckReturn::Passed,
         CheckReturn::Passed,
         CheckReturn::Passed,

@@ -72,7 +72,7 @@ impl std::fmt::Display for CheckReturn {
         match self {
             Self::Passed => write!(f, "[32m[1mPassed[22m[39m"),
             Self::Failed(ce) => write!(f, "[31m[1mFailed:[22m {ce}[39m"),
-            Self::Unchecked(uc) => write!(f, "[33m{uc}[39m"),
+            Self::Unchecked(uc) => write!(f, "{uc}"),
         }
     }
 }
@@ -80,8 +80,13 @@ impl std::fmt::Display for CheckReturn {
 impl std::fmt::Display for CheckedRunReturn {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Ok(rr) => write!(f, "{rr}"),
-            Self::Unchecked { reason, ret } => write!(f, "{ret} [33m[2m{reason}[22m[39m"),
+            Self::Ok(rr)
+            | Self::Unchecked {
+                reason: Unchecked::Elided,
+                ret: rr,
+            } => write!(f, "{rr}"),
+
+            Self::Unchecked { reason, ret } => write!(f, "{ret} [2m{reason}[22m"),
             Self::CheckFailed(ce) => write!(f, "[31m[1mTest Failed:[22m {ce}[39m"),
             Self::RunFailed(ie) => write!(f, "[31m[1mError:[22m {ie}[39m"),
         }
@@ -101,9 +106,17 @@ impl std::fmt::Display for RunReturn {
 impl std::fmt::Display for Unchecked {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::NoInput => write!(f, "No test input provided, unable to test"),
-            Self::NoOuput(sp) => {
-                write!(f, "Test returned [4m{sp}[24m, no answer to check against")
+            Self::Elided => write!(f, "[32mTest elided.[32m"),
+            Self::ElideMismatch(sp) => write!(
+                f,
+                "[33mTried to elide test (empty string), but provided test answer ([4m{sp}[24m)[39m"
+            ),
+            Self::MissingInput => write!(f, "[33mNo test input provided, unable to test[39m"),
+            Self::MissingOuput(sp) => {
+                write!(
+                    f,
+                    "[33mTest returned [4m{sp}[24m, no answer to check against[39m"
+                )
             }
         }
     }

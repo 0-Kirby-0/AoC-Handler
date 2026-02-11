@@ -18,6 +18,8 @@ pub use time_key::{Day, Part, Year};
 mod execution;
 pub use execution::SolutionPart;
 
+use crate::execution::test_input::TestInput;
+
 mod input_handler;
 
 pub struct Handler<'a> {
@@ -41,6 +43,6 @@ pub struct Solver {
 
 struct SolverPart {
     solver: &'static dyn Fn(&str) -> execution::SolutionPart,
-    test_input: &'static str,
+    test_input: TestInput,
     test_answer: execution::SolutionPart,
 }
